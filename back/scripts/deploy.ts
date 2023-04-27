@@ -1,25 +1,11 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
 
-  const lockedAmount = ethers.utils.parseEther("0.001");
-
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(lockedAmount)}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
-
-  const BatailleNaval = await ethers.getContractFactory("BatailleNaval");
-  const contract = await BatailleNaval.deploy("Test");
-  await contract.deployed();
-  console.log("PlayerContract deployed to:", contract.address);
-
+  const BatailleNavalContractToDeploy = await ethers.getContractFactory("BatailleNaval");
+  const BatailleNavalContractDeployed = await BatailleNavalContractToDeploy.deploy();
+  await BatailleNavalContractDeployed.deployed();
+  console.log("PlayerContract deployed to:", BatailleNavalContractDeployed.address);
 
 }
 

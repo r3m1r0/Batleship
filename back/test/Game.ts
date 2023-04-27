@@ -1,214 +1,56 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Game } from "../typechain-types";
-import { Boat, Direction, Kind, Name, NameIterator, State } from "./types";
-import { inspect } from "util"
 
-describe("Game", function () {
-    // We define a fixture to reuse the same setup in every test.
-    // We use loadFixture to run this setup once, snapshot that state,
-    // and reset Hardhat Network to that snapshot in every test.
-    async function deployGame() {
+describe("BatailleNavale", function () {
 
-        // Contracts are deployed using the first signer/account by default
-        const [player1, player2] = await ethers.getSigners();
+    let batailleNavale: any;
+    let player1: any;
+    let player2: any;
 
-        const Game = await ethers.getContractFactory("Game");
-        const game = await Game.deploy(player1.address, player2.address, player1.address);
+    beforeEach(async function () {
+        const BatailleNavale = await ethers.getContractFactory("BatailleNaval");
+        batailleNavale = await BatailleNavale.deploy();
+        await batailleNavale.deployed();
 
-        const boats = [
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 0,
-                    col: 0,
-                },
-                kind: Kind.BATTLESHIP
-            },
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 0,
-                    col: 0,
-                },
-                kind: Kind.CARRIER
-            },
-
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 1,
-                    col: 0,
-                },
-                kind: Kind.BATTLESHIP
-            },
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 2,
-                    col: 0,
-                },
-                kind: Kind.CRUISER
-            },
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 3,
-                    col: 0,
-                },
-                kind: Kind.CRUISER
-            },
-            {
-                exist: true,
-                direction: Direction.HORIZONTAL,
-                topLeft: {
-                    row: 4,
-                    col: 0,
-                },
-                kind: Kind.DESTROYER
-            }
-        ]
-        return { game, player1, player2, boats };
-    }
-
-    describe("Deployment", function () {
-        it("Should deploy", async function () {
-            const { game, player1 } = await loadFixture(deployGame);
-            expect(await game.getCurrentPlayer()).to.equal(player1.address);
-        });
+        [player1, player2] = await ethers.getSigners();
     });
 
-    describe("Execution", function () {
-        describe("Boats positionning", function () {
-            it("Should add a boat", async function () {
-                const { game, player2 } = await loadFixture(deployGame);
-                const battleship: Boat = {
-                    exist: true,
-                    direction: Direction.HORIZONTAL,
-                    topLeft: {
-                        row: 3,
-                        col: 5,
-                    },
-                    kind: Kind.BATTLESHIP
-                }
-                const cruiser: Boat = {
-                    exist: true,
-                    direction: Direction.VERTICAL,
-                    topLeft: {
-                        row: 6,
-                        col: 0,
-                    },
-                    kind: Kind.CRUISER
-                }
-                await game.placeBoat(Name.BATTLESHIP, battleship)
-                await game.placeBoat(Name.CRUISER1, cruiser)
-                const boats = await getBoats(game);
-                expect(boats.length).to.eql(2)
+    it("doit être déployé", async function () {
+        expect(await batailleNavale.deployed()).to.equal(batailleNavale);
+    });
 
-                const cruiser2: Boat = {
-                    exist: true,
-                    direction: Direction.VERTICAL,
-                    topLeft: {
-                        col: 0,
-                        row: 5
-                    },
-                    kind: Kind.CRUISER
-                }
-                const cruiser3: Boat = {
-                    exist: true,
-                    direction: Direction.HORIZONTAL,
-                    topLeft: {
-                        col: 5,
-                        row: 1
-                    },
-                    kind: Kind.CRUISER
-                }
-                const gamePlayer2 = game.connect(player2)
-                await gamePlayer2.placeBoat(Name.CRUISER1, cruiser2)
-                await gamePlayer2.placeBoat(Name.CRUISER2, cruiser3)
-                const boatsPlayer2 = await getBoats(gamePlayer2);
-                expect(boatsPlayer2.length).to.eql(2)
-            });
-            it("Should not add overlapping boats", async function () {
-                const { game } = await loadFixture(deployGame);
-                const battleship: Boat = {
-                    exist: true,
-                    direction: Direction.HORIZONTAL,
-                    topLeft: {
-                        col: 5,
-                        row: 3
-                    },
-                    kind: Kind.BATTLESHIP
-                }
-                const cruiser: Boat = {
-                    exist: true,
-                    direction: Direction.VERTICAL,
-                    topLeft: {
-                        col: 5,
-                        row: 3
-                    },
-                    kind: Kind.CRUISER
-                }
-                await game.placeBoat(Name.BATTLESHIP, battleship)
-                try {
-                    await game.placeBoat(Name.CRUISER1, cruiser)
-                    expect("no collision detected").to.equal("collision should have been detected")
-                }
-                catch (err: any) {
-                    let reason = /.+\s'(?<reason>.+)'/.exec(err.message)?.groups?.reason
-                    expect(reason).to.equal("boat collides with existing boat!")
-                }
-            });
-            it("must hit", async () => {
-                const { game, player1, player2, boats } = await loadFixture(deployGame);
-                game.placeBoat(Name.CARRIER, boats[0])
-                game.placeBoat(Name.BATTLESHIP, boats[1])
-                game.placeBoat(Name.CRUISER1, boats[2])
-                game.placeBoat(Name.CRUISER2, boats[3])
-                game.placeBoat(Name.DESTROYER, boats[4])
-                const game2 = game.connect(player2)
-                game2.placeBoat(Name.CARRIER, boats[0])
-                game2.placeBoat(Name.BATTLESHIP, boats[1])
-                game2.placeBoat(Name.CRUISER1, boats[2])
-                game2.placeBoat(Name.CRUISER2, boats[3])
-                game2.placeBoat(Name.DESTROYER, boats[4])
+    it("doit permettre à 2 joueur de se connecter", async function () {
+        await batailleNavale.joinGame();
+        await batailleNavale.connect(player2).joinGame();
 
-                await game.hit({ row: 0, col: 0 })
-                let id = await game.getCurrentHitId()
+        const Player1 = await batailleNavale.player1();
+        const Player2 = await batailleNavale.player2();
 
-                expect(id).to.equal(1)
+        expect(Player1).to.equal(player1.address);
+        expect(Player2).to.equal(player2.address);
+    });
 
-                await game2.completeHit(id, State.MISSED)
-                id = await game.getCurrentHitId()
-                expect(id).to.equal(2)
+    it("doit permettre d'ajouter un bateau", async function () {
+        await batailleNavale.joinGame();
+        await batailleNavale.connect(player2).joinGame();
 
-            })
-        });
+        await batailleNavale.placeShip(1, 4, 4, true);
+        await batailleNavale.connect(player2).placeShip(3, 6, 3, false);
 
-        describe("Events", function () {
-            it("Should emit an event on withdrawals", async function () {
-                const { game, player1 } = await loadFixture(deployGame);
+        const Bateau1 = await batailleNavale.getShips(player1.address);
+        const Bateau2 = await batailleNavale.getShips(player2.address);
 
-                //TODO
-            });
-        });
+        expect(Bateau1[0].x).to.equal(4);
+        expect(Bateau1[0].y).to.equal(4);
+        expect(Bateau1[0].size).to.equal(1);
+        expect(Bateau1[0].horizontal).to.equal(true);
+
+        expect(Bateau2[0].x).to.equal(6);
+        expect(Bateau2[0].y).to.equal(3);
+        expect(Bateau2[0].size).to.equal(3);
+        expect(Bateau2[0].horizontal).to.equal(false);
+
     });
 });
-async function getBoats(game: Game) {
-    const boats = [];
-    for (const kind of NameIterator()) {
-        const boat = await game.getBoat(kind);
-        if (boat.exist) {
-            boats.push(boat);
-        }
-    }
-    return boats;
-}
+
 
