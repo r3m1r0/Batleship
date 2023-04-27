@@ -6,7 +6,7 @@
  - le smart-contract est testé par la commande "npx hardhat test" (min 5 tests significatifs) **1pt** [![Generic badge](https://img.shields.io/badge/-FAIT-<GREEN>.svg)](https://shields.io/)
  - le test du smart-contract permet de tester le déploiement du contrat (deux joueurs obligatoires) **1pt** [![Generic badge](https://img.shields.io/badge/-FAIT-<GREEN>.svg)](https://shields.io/)
  - le test du smart-contract permet de tester l'ajout correct d'un bateau sur sa grille **1pt** [![Generic badge](https://img.shields.io/badge/-FAIT-<GREEN>.svg)](https://shields.io/)
-- le test du smart-contract permet de tester l'ajout incorrect d'un bateau sur sa grille **1pt** [![Generic badge](https://img.shields.io/badge/-FAIT-<GREEN>.svg)](https://shields.io/)
+- le test du smart-contract permet de tester l'ajout incorrect d'un bateau sur sa grille **1pt** 
 - le test du smart-contract permet de tester une tentative correcte sur la grille de l'adversaire **1pt**
 - le test du smart-contract permet de tester une tentative incorrecte sur la grille de l'adversaire **1pt**
 - le test du smart-contract permet de tester une tentative correcte mais par le mauvais joueur sur la grille de l'adversaire **1pt** (gestion des tours)
