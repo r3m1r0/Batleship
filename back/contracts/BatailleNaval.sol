@@ -1,62 +1,55 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.0;
 
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
-
-contract BatailleNaval {
-    address public player1;
-    address public player2;
-
-    constructor(address _player1, address _player2) payable {
-        player1 = _player1;
-        player2 = _player2;
+contract BattleShip {
+    struct Ship {
+        uint x;
+        uint y;
+        bool isPlaced;
+        bool isHit;
     }
 
-    // mapping(address => Boat[]) public playerBoats;
+    //mapping(uint8 => mapping(uint8 => Ship)) public grille;
 
-    // function placeBoat(Boat memory bateau) {
-    //         for (uint8 x = 0; x < 9; x++) {
-    //             for (uint8 y = 0; y < 9; y++) {
+    mapping(address => Ship[3]) public playerShips;
+    address public player1;
+    address public player2;
+    bool public gameStarted;
 
-    //             }
-    //     }
+    event GameStarted(address indexed player1, address indexed player2);
+    event ShipPlaced(address indexed player, uint shipIndex, uint x, uint y);
+    event AttackResult(
+        address indexed attacker,
+        address indexed defender,
+        uint x,
+        uint y,
+        bool isHit
+    );
 
-    // function addBoat(
-    //     Name _name,
-    //     Coord memory _coord,
-    //     Direction _direction,
-    //     Kind _kind
-    // ) public {
-    //     Boat memory newBoat = Boat(true, _name, _coord, _direction, _kind);
-    //     playerBoats[msg.sender].push(newBoat);
-    // }
+    function joinGame() public {
+        if (player1 == address(0)) {
+            player1 = msg.sender;
+        } else {
+            player2 = msg.sender;
+            emit GameStarted(player1, player2);
+        }
+    }
 
-    // function getCurrentPlayer() public view returns (address) {
-    //     if (msg.sender == player1) {
-    //         return player2;
-    //     } else {
-    //         return player1;
-    //     }
-    // }
+    function placeShip(uint shipIndex, uint x, uint y) public {
+        Ship storage ship = playerShips[msg.sender][shipIndex];
+        ship.x = x;
+        ship.y = y;
+        ship.isPlaced = true;
+        emit ShipPlaced(msg.sender, shipIndex, x, y);
+    }
 
-    // function switchPlayer() private {
-    //     if (currentPlayer == player1) {
-    //         currentPlayer = player2;
-    //     } else {
-    //         currentPlayer = player1;
-    //     }
-    // }
-
-    // function getBoatLength(Kind _kind) external view returns (uint8) {
-    //     if (_kind == Kind.CARRIER) {
-    //         return 5;
-    //     } else if (_kind == Kind.BATTLESHIP) {
-    //         return 4;
-    //     } else if (_kind == Kind.CRUISER) {
-    //         return 3;
-    //     } else {
-    //         return 2;
-    //     }
-    // }
+    function attack(uint x, uint y) public {
+        bool isHit = false;
+        for (uint i = 0; i < Ship.length; i++) {
+            if (Ship.isPlaced && !Ship.isHit && Ship.x == x && Ship.y == y) {
+                Ship.isHit = true;
+                isHit = true;
+                break;
+            }
+        }
+    }
 }
